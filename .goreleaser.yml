@@ -1,0 +1,9 @@
+builds:
+  - main: .
+    ldflags:
+      - -s -w
+      - -X github.com/KeisukeYamashita/github-app-token-generator-cli/cmd/version.Version={{.Tag}}
+    goos:
+      - linux
+      - darwin
+      - windows
