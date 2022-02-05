@@ -58,8 +58,8 @@ func newRootCmd(out io.Writer) *cobra.Command {
 	}
 
 	cmd.AddCommand(version.NewVersionCmd(out))
-	cmd.PersistentFlags().IntVarP(&opts.retryMax, "retry", "r", 5, "retry count")
-	cmd.PersistentFlags().StringVarP(&opts.timeout, "timeout", "t", "1s", "overall timeout")
+	cmd.PersistentFlags().IntVarP(&opts.retryMax, "retry", "r", 6, "retry count")
+	cmd.PersistentFlags().StringVarP(&opts.timeout, "timeout", "t", "30s", "overall timeout")
 	cmd.PersistentFlags().StringVar(&opts.reqTimeout, "request-timeout", "30s", "timeout for each request")
 	cmd.PersistentFlags().StringVarP(&opts.logFormat, "log-format", "", "console", "format of the logs")
 	cmd.PersistentFlags().StringVarP(&opts.logLevel, "log-level", "", "info", "output of the logs")
