@@ -22,10 +22,12 @@ Available Commands:
   version     
 
 Flags:
-  -h, --help                help for github-app-token-generator-cli
-      --log-format string   format of the logs (default "console")
-      --log-level string    output of the logs (default "info")
-  -r, --retry int           retry count
+  -h, --help                     help for github-app-token-generator-cli
+      --log-format string        format of the logs (default "console")
+      --log-level string         output of the logs (default "info")
+      --request-timeout string   timeout for each request (default "30s")
+  -r, --retry int                retry count (default 5)
+  -t, --timeout string           overall timeout, defaults to 1s (default "1s")
 
 Use "github-app-token-generator-cli [command] --help" for more information about a command.
 ```

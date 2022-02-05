@@ -38,8 +38,9 @@ func Execute(out io.Writer) error {
 }
 
 type rootOpt struct {
-	retryMax int
-	timeout  string
+	retryMax   int
+	timeout    string
+	reqTimeout string
 
 	logFormat string
 	logLevel  string
@@ -58,7 +59,8 @@ func newRootCmd(out io.Writer) *cobra.Command {
 
 	cmd.AddCommand(version.NewVersionCmd(out))
 	cmd.PersistentFlags().IntVarP(&opts.retryMax, "retry", "r", 5, "retry count")
-	cmd.PersistentFlags().StringVarP(&opts.timeout, "timeout", "t", "1s", "timeout")
+	cmd.PersistentFlags().StringVarP(&opts.timeout, "timeout", "t", "1s", "overall timeout, defaults to 1s")
+	cmd.PersistentFlags().StringVar(&opts.reqTimeout, "request-timeout", "30s", "timeout for each request")
 	cmd.PersistentFlags().StringVarP(&opts.logFormat, "log-format", "", "console", "format of the logs")
 	cmd.PersistentFlags().StringVarP(&opts.logLevel, "log-level", "", "info", "output of the logs")
 
@@ -86,6 +88,14 @@ func run(out io.Writer, opts *rootOpt) func(cmd *cobra.Command, args []string) e
 		}
 
 		retryClient := retryablehttp.NewClient()
+
+		reqTimeout, err := time.ParseDuration(opts.reqTimeout)
+		if err != nil {
+			log.Fatal("Can't parse timeout flag", zap.String("requestTimeout", opts.reqTimeout), zap.Error(err))
+			return err
+		}
+
+		retryClient.HTTPClient.Timeout = reqTimeout
 		retryClient.CheckRetry = checkRetry
 		retryClient.RetryMax = opts.retryMax
 		retryClient.Logger = nil
@@ -128,8 +138,10 @@ func checkRetry(ctx context.Context, resp *http.Response, err error) (bool, erro
 	// do not retry on context.Canceled
 	if err := ctx.Err(); err != nil {
 		if !errors.Is(err, context.DeadlineExceeded) {
+			fmt.Println("hoho")
 			return false, ctx.Err()
 		}
+		fmt.Println("timeout")
 
 		return true, nil
 	}
