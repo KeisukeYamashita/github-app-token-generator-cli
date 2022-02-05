@@ -15,11 +15,6 @@ jobs:
           go-version: 1.17
       - run: go build
 
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: golangci/golangci-lint-action@v2
-
   test:
     runs-on: ubuntu-latest
     steps:
