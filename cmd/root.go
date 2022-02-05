@@ -2,9 +2,15 @@ package cmd
 
 import (
 	"context"
+	"crypto/x509"
+	"errors"
 	"fmt"
 	"io"
+	"net/http"
+	"net/url"
+	"regexp"
 	"strconv"
+	"time"
 
 	"github.com/KeisukeYamashita/github-app-token-generator-cli/cmd/version"
 	"github.com/KeisukeYamashita/github-app-token-generator-cli/pkg/logging"
@@ -14,12 +20,26 @@ import (
 	"go.uber.org/zap"
 )
 
+// Ported from https://github.com/hashicorp/go-retryablehttp/blob/ff6d014e72d968e0f328637b209477ee09393175/client.go#L63-L71
+var (
+	// A regular expression to match the error returned by net/http when the
+	// configured number of redirects is exhausted. This error isn't typed
+	// specifically so we resort to matching on the error string.
+	redirectsErrorRe = regexp.MustCompile(`stopped after \d+ redirects\z`)
+
+	// A regular expression to match the error returned by net/http when the
+	// scheme specified in the URL is invalid. This error isn't typed
+	// specifically so we resort to matching on the error string.
+	schemeErrorRe = regexp.MustCompile(`unsupported protocol scheme`)
+)
+
 func Execute(out io.Writer) error {
 	return newRootCmd(out).Execute()
 }
 
 type rootOpt struct {
 	retryMax int
+	timeout  string
 
 	logFormat string
 	logLevel  string
@@ -38,6 +58,7 @@ func newRootCmd(out io.Writer) *cobra.Command {
 
 	cmd.AddCommand(version.NewVersionCmd(out))
 	cmd.PersistentFlags().IntVarP(&opts.retryMax, "retry", "r", 5, "retry count")
+	cmd.PersistentFlags().StringVarP(&opts.timeout, "timeout", "t", "1s", "timeout")
 	cmd.PersistentFlags().StringVarP(&opts.logFormat, "log-format", "", "console", "format of the logs")
 	cmd.PersistentFlags().StringVarP(&opts.logLevel, "log-level", "", "info", "output of the logs")
 
@@ -65,6 +86,7 @@ func run(out io.Writer, opts *rootOpt) func(cmd *cobra.Command, args []string) e
 		}
 
 		retryClient := retryablehttp.NewClient()
+		retryClient.CheckRetry = checkRetry
 		retryClient.RetryMax = opts.retryMax
 		retryClient.Logger = nil
 		c := retryClient.StandardClient()
@@ -81,7 +103,15 @@ func run(out io.Writer, opts *rootOpt) func(cmd *cobra.Command, args []string) e
 			return err
 		}
 
-		token, err := itr.Token(context.Background())
+		timeout, err := time.ParseDuration(opts.timeout)
+		if err != nil {
+			log.Fatal("Can't parse timeout flag", zap.String("timeout", opts.timeout), zap.Error(err))
+			return err
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		token, err := itr.Token(ctx)
 		if err != nil {
 			log.Fatal("Failed to get token", zap.Error(err))
 			return err
@@ -90,4 +120,63 @@ func run(out io.Writer, opts *rootOpt) func(cmd *cobra.Command, args []string) e
 		fmt.Printf("%s", token)
 		return nil
 	}
+}
+
+// Inspired by https://github.com/hashicorp/go-retryablehttp/blob/ff6d014e72d968e0f328637b209477ee09393175/client.go#L411-L420
+// Supported retry on timeout
+func checkRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
+	// do not retry on context.Canceled
+	if err := ctx.Err(); err != nil {
+		if !errors.Is(err, context.DeadlineExceeded) {
+			return false, ctx.Err()
+		}
+
+		return true, nil
+	}
+
+	// don't propagate other errors
+	shouldRetry, _ := baseRetryPolicy(resp, err)
+	return shouldRetry, nil
+}
+
+// Ported from https://github.com/hashicorp/go-retryablehttp/blob/ff6d014e72d968e0f328637b209477ee09393175/client.go#L434-L473
+func baseRetryPolicy(resp *http.Response, err error) (bool, error) {
+	if err != nil {
+		if v, ok := err.(*url.Error); ok {
+			// Don't retry if the error was due to too many redirects.
+			if redirectsErrorRe.MatchString(v.Error()) {
+				return false, v
+			}
+
+			// Don't retry if the error was due to an invalid protocol scheme.
+			if schemeErrorRe.MatchString(v.Error()) {
+				return false, v
+			}
+
+			// Don't retry if the error was due to TLS cert verification failure.
+			if _, ok := v.Err.(x509.UnknownAuthorityError); ok {
+				return false, v
+			}
+		}
+
+		// The error is likely recoverable so retry.
+		return true, nil
+	}
+
+	// 429 Too Many Requests is recoverable. Sometimes the server puts
+	// a Retry-After response header to indicate when the server is
+	// available to start processing request from client.
+	if resp.StatusCode == http.StatusTooManyRequests {
+		return true, nil
+	}
+
+	// Check the response code. We retry on 500-range responses to allow
+	// the server time to recover, as 500's are typically not permanent
+	// errors and may relate to outages on the server side. This will catch
+	// invalid response codes as well, like 0 and 999.
+	if resp.StatusCode == 0 || (resp.StatusCode >= 500 && resp.StatusCode != 501) {
+		return true, fmt.Errorf("unexpected HTTP status %s", resp.Status)
+	}
+
+	return false, nil
 }
