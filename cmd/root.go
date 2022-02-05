@@ -37,7 +37,7 @@ func newRootCmd(out io.Writer) *cobra.Command {
 	}
 
 	cmd.AddCommand(version.NewVersionCmd(out))
-	cmd.PersistentFlags().IntVarP(&opts.retryMax, "retry", "r", 0, "retry count")
+	cmd.PersistentFlags().IntVarP(&opts.retryMax, "retry", "r", 5, "retry count")
 	cmd.PersistentFlags().StringVarP(&opts.logFormat, "log-format", "", "console", "format of the logs")
 	cmd.PersistentFlags().StringVarP(&opts.logLevel, "log-level", "", "info", "output of the logs")
 
