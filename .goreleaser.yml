@@ -7,3 +7,20 @@ builds:
       - linux
       - darwin
       - windows
+dockers:
+  - image_templates:
+      - "ghcr.io/KeisukeYamashita/github-app-token-generater-cli:{{ .Tag }}"
+      - "ghcr.io/KeisukeYamashita/github-app-token-generater-cli:v{{ .Major }}"
+      - "ghcr.io/KeisukeYamashita/github-app-token-generater-cli:v{{ .Major }}.{{ .Minor }}"
+      - "ghcr.io/KeisukeYamashita/github-app-token-generater-cli:latest"
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+    dockerfile: Dockerfile.compile
+    goos: linux
+    goarch: amd64
+    ids:
+      - github-app-token-generater-cli
