@@ -7,10 +7,10 @@ builds:
       - linux
 dockers:
   - image_templates:
-      - "ghcr.io/KeisukeYamashita/github-app-token-generater-cli:{{ .Tag }}"
-      - "ghcr.io/KeisukeYamashita/github-app-token-generater-cli:v{{ .Major }}"
-      - "ghcr.io/KeisukeYamashita/github-app-token-generater-cli:v{{ .Major }}.{{ .Minor }}"
-      - "ghcr.io/KeisukeYamashita/github-app-token-generater-cli:latest"
+      - "docker.pkg.github.com/keisukeyamashita/github-app-token-generator-cli/cli:{{ .Tag }}"
+      - "docker.pkg.github.com/keisukeyamashita/github-app-token-generator-cli/cli:v{{ .Major }}"
+      - "docker.pkg.github.com/keisukeyamashita/github-app-token-generator-cli/cli:v{{ .Major }}.{{ .Minor }}"
+      - "docker.pkg.github.com/keisukeyamashita/github-app-token-generator-cli/cli:latest"
     build_flag_templates:
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -21,4 +21,4 @@ dockers:
     goos: linux
     goarch: amd64
     ids:
-      - github-app-token-generater-cli
+      - github-app-token-generator-cli
