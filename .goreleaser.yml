@@ -5,8 +5,6 @@ builds:
       - -X github.com/KeisukeYamashita/github-app-token-generator-cli/cmd/version.Version={{.Tag}}
     goos:
       - linux
-      - darwin
-      - windows
 dockers:
   - image_templates:
       - "ghcr.io/KeisukeYamashita/github-app-token-generater-cli:{{ .Tag }}"
