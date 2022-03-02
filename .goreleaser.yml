@@ -31,4 +31,3 @@ dockers:
     goarch: amd64
     ids:
       - github-app-token-generator-cli
-    use: buildx
