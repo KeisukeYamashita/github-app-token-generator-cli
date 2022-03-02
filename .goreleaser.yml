@@ -1,24 +1,34 @@
 builds:
-  - main: .
+  - id: github-app-token-generator-cli
+    main: .
     ldflags:
       - -s -w
       - -X github.com/KeisukeYamashita/github-app-token-generator-cli/cmd/version.Version={{.Tag}}
+    goarch:
+      - amd64
+      - arm64
     goos:
       - linux
       - darwin
       - windows
 dockers:
-  - image_templates:
-      - "docker.pkg.github.com/keisukeyamashita/github-app-token-generator-cli/cli:{{ .Tag }}"
-      - "docker.pkg.github.com/keisukeyamashita/github-app-token-generator-cli/cli:v{{ .Major }}"
-      - "docker.pkg.github.com/keisukeyamashita/github-app-token-generator-cli/cli:v{{ .Major }}.{{ .Minor }}"
-      - "docker.pkg.github.com/keisukeyamashita/github-app-token-generator-cli/cli:latest"
-    build_flag_templates:
+  - build_flag_templates:
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--platform=linux/amd64"
     dockerfile: Dockerfile.compile
+    extra_files:
+      - LICENSE
+    image_templates:
+      - "docker.pkg.github.com/keisukeyamashita/github-app-token-generator-cli/cli:{{ .Tag }}"
+      - "docker.pkg.github.com/keisukeyamashita/github-app-token-generator-cli/cli:v{{ .Major }}"
+      - "docker.pkg.github.com/keisukeyamashita/github-app-token-generator-cli/cli:v{{ .Major }}.{{ .Minor }}"
+      - "docker.pkg.github.com/keisukeyamashita/github-app-token-generator-cli/cli:latest"
     goos: linux
     goarch: amd64
+    ids:
+      - github-app-token-generator-cli
+    use: buildx
