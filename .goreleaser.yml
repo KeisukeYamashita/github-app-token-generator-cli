@@ -22,5 +22,3 @@ dockers:
     dockerfile: Dockerfile.compile
     goos: linux
     goarch: amd64
-    ids:
-      - github-app-token-generator-cli
