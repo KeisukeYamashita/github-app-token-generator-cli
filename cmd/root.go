@@ -111,13 +111,14 @@ func run(out io.Writer, opts *rootOpt) func(cmd *cobra.Command, args []string) e
 			appInstallationID,
 			rsaPrivateKeyPemPath,
 		)
-		if opts.url != "" {
-			itr.BaseURL = opts.url
-		}
-
 		if err != nil {
 			log.Fatal("Failed to create new transport", zap.Error(err))
 			return err
+		}
+
+		if opts.url != "" {
+			log.Debug("Configured base url for transporter", zap.String("url", opts.url))
+			itr.BaseURL = opts.url
 		}
 
 		timeout, err := time.ParseDuration(opts.timeout)
