@@ -32,3 +32,11 @@ Flags:
 
 Use "github-app-token-generator-cli [command] --help" for more information about a command.
 ```
+
+## GitHub Enterprise
+
+For users using GitHub enterprise, you can specify the GitHub API's URL with `--url` flag as below:
+
+```console
+$ github-app-token-generator-cli xxx yyy private-key.pem  --url https://<YOUR_HOST>/api/v3
+```
