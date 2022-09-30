@@ -44,6 +44,9 @@ type rootOpt struct {
 
 	logFormat string
 	logLevel  string
+
+	// For enterprise users
+	url string
 }
 
 func newRootCmd(out io.Writer) *cobra.Command {
@@ -63,6 +66,7 @@ func newRootCmd(out io.Writer) *cobra.Command {
 	cmd.PersistentFlags().StringVar(&opts.reqTimeout, "request-timeout", "30s", "timeout for each request")
 	cmd.PersistentFlags().StringVarP(&opts.logFormat, "log-format", "", "console", "format of the logs")
 	cmd.PersistentFlags().StringVarP(&opts.logLevel, "log-level", "", "info", "output of the logs")
+	cmd.PersistentFlags().StringVar(&opts.url, "url", "", "url of the GitHub API. Defaults to the https://api.github.com")
 
 	return cmd
 }
@@ -107,6 +111,9 @@ func run(out io.Writer, opts *rootOpt) func(cmd *cobra.Command, args []string) e
 			appInstallationID,
 			rsaPrivateKeyPemPath,
 		)
+		if opts.url != "" {
+			itr.BaseURL = opts.url
+		}
 
 		if err != nil {
 			log.Fatal("Failed to create new transport", zap.Error(err))

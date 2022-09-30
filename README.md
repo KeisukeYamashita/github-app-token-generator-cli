@@ -28,6 +28,7 @@ Flags:
       --request-timeout string   timeout for each request (default "30s")
   -r, --retry int                retry count (default 5)
   -t, --timeout string           overall timeout (default "1s")
+      --url                      url of the GitHub API
 
 Use "github-app-token-generator-cli [command] --help" for more information about a command.
 ```
