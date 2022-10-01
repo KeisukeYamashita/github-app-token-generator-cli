@@ -6,7 +6,7 @@ require (
 	github.com/bradleyfalzon/ghinstallation/v2 v2.1.0
 	github.com/hashicorp/go-retryablehttp v0.7.0
 	github.com/spf13/cobra v1.5.0
-	go.uber.org/zap v1.17.0
+	go.uber.org/zap v1.23.0
 )
 
 require (
